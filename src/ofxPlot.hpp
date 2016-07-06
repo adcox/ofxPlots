@@ -82,6 +82,12 @@ public:
 	void setYLabel(std::string);
 	void setTitle(std::string);
 	
+	void setAxesColor(ofColor);
+	void setBGColor(ofColor);
+	void setFillColor(ofColor);
+	void setLineColor(ofColor);
+	void setTextColor(ofColor);
+
 	void mouseMoved(ofMouseEventArgs&);
 
 protected:

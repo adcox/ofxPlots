@@ -81,10 +81,17 @@ void ofxPlot::draw(){
             minY = data[i].depVar < minY ? data[i].depVar : minY;
         }
     }
+	
+	// Zero MUST be part of the data set
+	// ToDo (perhaps): allow axes to represent values other than x = 0 or y = 0
+    maxX = maxX > 0 ? maxX : 0;
+    minX = minX < 0 ? minX : 0;
+    maxY = maxY > 0 ? maxY : 0;
+    minY = minY < 0 ? minY : 0;
     
     // Determine scaling amounts so that data will fit in plot area
-    float xScale = std::max(std::floor(plot_w/(maxX - minX)), 1.f);
-    float yScale = std::max(std::floor(plot_h/(maxY - minY)), 1.f);
+    double xScale = plot_w/(maxX - minX);
+    double yScale = plot_h/(maxY - minY);
     
     // Place axes to use as much of the plot area as possible
     float dataOrigin_x = plot_x - minX*xScale;
@@ -98,22 +105,22 @@ void ofxPlot::draw(){
 	ofSetColor(textColor);
 	if(font.isLoaded()){
 		ofRectangle titleBox = font.getStringBoundingBox(title, 0,0);
-		font.drawString(title, plot_x + 0.5*(w - 2*padding - titleBox.width), plot_y - plot_h - 5);
+		font.drawString(title, plot_x + 0.5*(plot_w - titleBox.width), plot_y - plot_h - 5);
 		ofRectangle xLblBox = font.getStringBoundingBox(xlabel, 0,0);
-		font.drawString(xlabel, plot_x + 0.5*(w - 2*padding - xLblBox.width), plot_y + padding - 5);
+		font.drawString(xlabel, plot_x + 0.5*(plot_w - xLblBox.width), plot_y + padding - 5);
 	}else{
-		ofDrawBitmapString(title, plot_x + 0.5*(w - 2*padding), y + padding - 5);
-		ofDrawBitmapString(xlabel, plot_x + 0.5*(w - 2*padding), y + h - 5);
+		ofDrawBitmapString(title, plot_x + 0.5*plot_w, y + padding - 5);
+		ofDrawBitmapString(xlabel, plot_x + 0.5*plot_w, y + h - 5);
 	}
 
 	ofPushMatrix();
 	ofRotate(-90, 0, 0, 1);						// Rotate camera for vertical axis
 	if(font.isLoaded()){
 		ofRectangle yLblBox = font.getStringBoundingBox(ylabel, 0,0);
-		font.drawString(ylabel, -y - h + 0.5*(h - 2*padding - yLblBox.height), x + padding - 5);
+		font.drawString(ylabel, -plot_y - padding + 0.5*(plot_h - 2*yLblBox.height), plot_x - 5);
 	}else{
 		ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL);	// This allows the bitmapString to rotate
-		ofDrawBitmapString(ylabel, -y - h + 0.5*(h-2*padding), x + padding - 5);
+		ofDrawBitmapString(ylabel, -plot_y - padding + 0.5*(plot_h - 2*padding), plot_x - 5);
 	}
 	ofPopMatrix();
 
@@ -309,6 +316,37 @@ void ofxPlot::setYLabel(std::string lbl){ ylabel = lbl; }
  *  @param str
  */
 void ofxPlot::setTitle(std::string str){ title = str; }
+
+/**
+ *  @brief Set the axes color
+ *  @param c axes color
+ */
+void ofxPlot::setAxesColor(ofColor c){ axesColor = c;}
+
+/**
+ *  @brief Set the background color
+ *  @param c background color
+ */
+void ofxPlot::setBGColor(ofColor c){ bgColor = c;}
+
+/**
+ *  @brief Set the plot fill color, i.e., the color of the 
+ *  fill under the curve
+ *  @param c fill color
+ */
+void ofxPlot::setFillColor(ofColor c){ fillColor = c;}
+
+/**
+ *  @brief Set the line color
+ *  @param c line color
+ */
+void ofxPlot::setLineColor(ofColor c){ lineColor = c;}
+
+/**
+ *  @brief Set the text color
+ *  @param c text color
+ */
+void ofxPlot::setTextColor(ofColor c){ textColor = c;}
 
 /**
  *  @brief Handle mouse movement events
