@@ -73,6 +73,7 @@ public:
 	void disableMouseInput();
 
 	void setFillPlot(bool);
+	void setFont(ofTrueTypeFont);
 	void setPosition(float, float);
 	void setPosition(ofVec2f);
 	void setSize(float, float);
@@ -112,6 +113,8 @@ protected:
 
 	ofRectangle viewport = ofRectangle(0, 0, 350, 350);		//!< Describes the area the plot occupies in screen space
 	ofxPlotArrow indAxis, depAxis;	//!< Axes arrows
+
+	ofTrueTypeFont font;
 
 	void setEvents(ofCoreEvents&);
 };

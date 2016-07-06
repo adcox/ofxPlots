@@ -30,15 +30,22 @@ void ofApp::setup(){
 
 	ofEnableSmoothing();
 
+	ofTrueTypeFont font;
+	font.load("verdana.ttf", 10, true, true);
+    font.setLineHeight(18.0f);
+    font.setLetterSpacing(1.037);
+
 	plot.setSize(600, 200);
 	plot.setPosition(270, 270);
 	plot.setXLabel("Time");
 	plot.setYLabel("Amplitude");
 	plot.setTitle("Amplitude Time History");
+	plot.setFont(font);		// Can comment this out to use bitmap strings (not as pretty!)
 	plot.enableMouseInput();
-	
+
+	// Create some bogus data
 	for(double t = -15; t < 50; t+= 0.05){
-		plot.addDataPt(t, 1*sin(t*PI) + 3*sin(t*PI/5));
+		plot.addDataPt(t, exp(-t/50)*(1*sin(t*PI) + 3*sin(t*PI/5)));
 	}
 }//====================================================
 

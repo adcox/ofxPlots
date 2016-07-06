@@ -96,13 +96,25 @@ void ofxPlot::draw(){
 
     // Draw title, axes labels
 	ofSetColor(textColor);
-	ofDrawBitmapString(title, plot_x + 0.5*(w - 2*padding), y + padding - 5);
-	ofDrawBitmapString(xlabel, plot_x + 0.5*(w - 2*padding), y + h - 5);
-	
+	if(font.isLoaded()){
+		ofRectangle titleBox = font.getStringBoundingBox(title, 0,0);
+		font.drawString(title, plot_x + 0.5*(w - 2*padding - titleBox.width), plot_y - plot_h - 5);
+		ofRectangle xLblBox = font.getStringBoundingBox(xlabel, 0,0);
+		font.drawString(xlabel, plot_x + 0.5*(w - 2*padding - xLblBox.width), plot_y + padding - 5);
+	}else{
+		ofDrawBitmapString(title, plot_x + 0.5*(w - 2*padding), y + padding - 5);
+		ofDrawBitmapString(xlabel, plot_x + 0.5*(w - 2*padding), y + h - 5);
+	}
+
 	ofPushMatrix();
 	ofRotate(-90, 0, 0, 1);						// Rotate camera for vertical axis
-	ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL);	// This allows the bitmapString to rotate
-	ofDrawBitmapString(ylabel, -y - h + 0.5*(h-2*padding), x + padding - 5);
+	if(font.isLoaded()){
+		ofRectangle yLblBox = font.getStringBoundingBox(ylabel, 0,0);
+		font.drawString(ylabel, -y - h + 0.5*(h - 2*padding - yLblBox.height), x + padding - 5);
+	}else{
+		ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL);	// This allows the bitmapString to rotate
+		ofDrawBitmapString(ylabel, -y - h + 0.5*(h-2*padding), x + padding - 5);
+	}
 	ofPopMatrix();
 
 	// Draw data
@@ -149,7 +161,12 @@ void ofxPlot::draw(){
         // Print out data value
         char dataStr[128];
         sprintf(dataStr, "(%.4f, %.4f)", data[highlightPtIx].indVar, data[highlightPtIx].depVar);
-        ofDrawBitmapString(dataStr, plot_x + plot_w - 125 - padding, plot_y + padding - 5);
+        if(font.isLoaded()){
+        	ofRectangle dataBox = font.getStringBoundingBox(dataStr, 0,0);
+        	font.drawString(dataStr, plot_x + plot_w - padding - dataBox.width, plot_y + padding - 5);
+        }else{
+        	ofDrawBitmapString(dataStr, plot_x + plot_w - 125 - padding, plot_y + padding - 5);
+        }
 	}
 
 	ofPopStyle();
@@ -227,6 +244,13 @@ void ofxPlot::setEvents(ofCoreEvents & _events){
  *  area under the plotted curve
  */
 void ofxPlot::setFillPlot(bool fill){ fillPlot = fill; }
+
+/**
+ *  @brief Set the font for the plot area
+ * 
+ *  @param f font to use for the plot
+ */
+void ofxPlot::setFont(ofTrueTypeFont f){ font = f; }
 
 /**
  *  @brief Set the position of the plot
