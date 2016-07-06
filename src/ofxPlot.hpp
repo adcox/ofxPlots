@@ -69,6 +69,9 @@ public:
 	void addDataPt(double, double);
 	void addDataPt(dataPt);
 
+	void enableMouseInput();
+	void disableMouseInput();
+
 	void setFillPlot(bool);
 	void setPosition(float, float);
 	void setPosition(ofVec2f);
@@ -78,14 +81,21 @@ public:
 	void setYLabel(std::string);
 	void setTitle(std::string);
 	
+	void mouseMoved(ofMouseEventArgs&);
+
 protected:
 	std::vector<dataPt> data;		//!< Stores all data values
+	std::vector<ofVec2f> displayData;//!< Same data, but in screen coordiantes (pixels)
 
 	std::string xlabel = "";		//!< Horizontal axis label
 	std::string ylabel = "";		//!< Vertical axis label
 	std::string title = "";			//!< Plot title
 
+	bool eventsSet = false;			//!< Whether or not the events have been set
 	bool fillPlot = false;			//!< Whether or not to fill the plot area
+	bool mouseInputEnabled = false;	//!< Whether or not the user can interact with the plot using the mouse
+
+	ofCoreEvents *events;			//!< Pointer to events object
 
 	ofColor lineColor = ofColor(125, 125, 255, 255);		//!< Color of plotted line
 	ofColor fillColor = ofColor(200, 200, 255, 0.9*255);	//!< Color of fill under plotted line
@@ -93,10 +103,15 @@ protected:
 	ofColor axesColor = ofColor(200, 200, 200, 0.9*255);	//!< Axes color
 	ofColor textColor = ofColor(200, 200, 200, 255);		//!< Axes label and title color
 
-	float axesWidth = 3;	//!< Axes line width
-	float lineWidth = 2;	//!< Plotted data line width
-	float padding = 25;		//!< Distance between outer rectangle and plot (i.e., with data) area
+	int highlightPtIx = -1;			//!< Data point to highlight; -1 is for N/A
+
+	float axesWidth = 3;			//!< Axes line width
+	float lineWidth = 2;			//!< Plotted data line width
+	float maxSelectDist = 10;		//!< Farthest the mouse can be from a data point and still select it
+	float padding = 25;				//!< Distance between outer rectangle and plot (i.e., with data) area
 
 	ofRectangle viewport = ofRectangle(0, 0, 350, 350);		//!< Describes the area the plot occupies in screen space
 	ofxPlotArrow indAxis, depAxis;	//!< Axes arrows
+
+	void setEvents(ofCoreEvents&);
 };

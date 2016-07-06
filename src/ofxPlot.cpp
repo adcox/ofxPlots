@@ -43,6 +43,10 @@ ofxPlot::ofxPlot(){
  *  @brief Draw the plot
  */
 void ofxPlot::draw(){
+	if(!eventsSet){
+		setEvents(ofEvents());
+	}
+
 	ofDisableDepthTest();
 	ofPushStyle();
 
@@ -102,14 +106,18 @@ void ofxPlot::draw(){
 	ofPopMatrix();
 
 	// Draw data
+	displayData.clear();
+	displayData.assign(data.size(), ofVec2f(0,0));
+
 	if(data.size() > 0){
 
 		ofPath dataPath;
 		for(size_t i = 0; i < data.size(); i++){
+			displayData[i] = ofVec2f(dataOrigin_x + xScale*data[i].indVar, dataOrigin_y - yScale*data[i].depVar);
 			if(i == 0)
-				dataPath.moveTo(ofVec2f(dataOrigin_x + xScale*data[i].indVar, dataOrigin_y - yScale*data[i].depVar));
+				dataPath.moveTo(displayData[i]);
 			else
-				dataPath.lineTo(ofVec2f(dataOrigin_x + xScale*data[i].indVar, dataOrigin_y - yScale*data[i].depVar));
+				dataPath.lineTo(displayData[i]);
 		}
 		dataPath.setColor(lineColor);
 		
@@ -121,6 +129,27 @@ void ofxPlot::draw(){
         }
         
 		dataPath.draw();
+	}
+
+	if(highlightPtIx >= 0){
+		ofNoFill();
+
+        // Draw a circle around the selected data point
+		// ofSetColor(ofColor::yellow);
+		// ofSetLineWidth(2);
+		// ofDrawCircle(displayData[highlightPtIx], 4);
+		// ofSetLineWidth(1);
+
+        // Draw big cross hairs
+		ofSetColor(axesColor);
+		ofSetLineWidth(1);
+        ofDrawLine(ofVec2f(plot_x, displayData[highlightPtIx].y), ofVec2f(plot_x + plot_w, displayData[highlightPtIx].y));
+        ofDrawLine(ofVec2f(displayData[highlightPtIx].x, plot_y), ofVec2f(displayData[highlightPtIx].x, plot_y - plot_h));
+
+        // Print out data value
+        char dataStr[128];
+        sprintf(dataStr, "(%.4f, %.4f)", data[highlightPtIx].indVar, data[highlightPtIx].depVar);
+        ofDrawBitmapString(dataStr, plot_x + plot_w - 125 - padding, plot_y + padding - 5);
 	}
 
 	ofPopStyle();
@@ -145,6 +174,50 @@ void ofxPlot::addDataPt(double ind, double dep){
  */
 void ofxPlot::addDataPt(dataPt pt){
     data.push_back(pt);
+}//====================================================
+
+/**
+ *  @brief Enable mouse input for the plot.
+ *  @details This allows the user to interact with the plot area
+ */
+void ofxPlot::enableMouseInput(){
+	if(!mouseInputEnabled && events){
+		ofAddListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
+	}
+	mouseInputEnabled = true;
+}//====================================================
+
+/**
+ *  @brief Disable mouse input for the plot.
+ */
+void ofxPlot::disableMouseInput(){
+	if(mouseInputEnabled && events){
+		ofRemoveListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
+	}
+	mouseInputEnabled = false;
+}//====================================================
+
+/**
+ *  @brief Give the camera the event object
+ *  @param _events reference to the window's events object
+ */
+void ofxPlot::setEvents(ofCoreEvents & _events){
+	// If en/disableMouseInput were called within ofApp::setup(),
+	// mouseInputEnabled will tell us about whether the camera
+	// mouse input needs to be initialised as enabled or disabled.
+	// we will still set `events`, so that subsequent enabling
+	// and disabling can work.
+
+	// we need a temporary copy of bMouseInputEnabled, since it will 
+	// get changed by disableMouseInput as a side-effect.
+	bool wasMouseInputEnabled = mouseInputEnabled;
+	disableMouseInput();
+	events = &_events;
+	if (wasMouseInputEnabled) {
+		// note: this will set bMouseInputEnabled to true as a side-effect.
+		enableMouseInput();
+	}
+	eventsSet = true;
 }//====================================================
 
 /**
@@ -212,4 +285,36 @@ void ofxPlot::setYLabel(std::string lbl){ ylabel = lbl; }
  *  @param str
  */
 void ofxPlot::setTitle(std::string str){ title = str; }
+
+/**
+ *  @brief Handle mouse movement events
+ *  @details This function is called every time the mouse is moved
+ *  (assuming mouse input has been enabled)
+ * 
+ *  @param mouse mouse event arguments
+ */
+void ofxPlot::mouseMoved(ofMouseEventArgs &mouse){
+	if(viewport.inside(mouse.x, mouse.y)){
+		// Find nearest point
+		float minDist;
+		int minIx;
+		for(size_t i = 0; i < displayData.size(); i++){
+			ofVec2f dist = displayData[i] - mouse;
+
+			if(i == 0 || dist.length() < minDist){
+				minDist = dist.length();
+				minIx = i;
+			}
+		}
+
+		if(minDist < maxSelectDist){
+			highlightPtIx = minIx;
+		}else{
+			highlightPtIx = -1;
+		}
+	}
+}//====================================================
+
+
+
 

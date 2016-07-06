@@ -35,7 +35,8 @@ void ofApp::setup(){
 	plot.setXLabel("Time");
 	plot.setYLabel("Amplitude");
 	plot.setTitle("Amplitude Time History");
-
+	plot.enableMouseInput();
+	
 	for(double t = -15; t < 50; t+= 0.05){
 		plot.addDataPt(t, 1*sin(t*PI) + 3*sin(t*PI/5));
 	}
