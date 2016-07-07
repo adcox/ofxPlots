@@ -26,6 +26,8 @@
 
 #include "ofxPlot.hpp"
 
+#include "dataSelectedEvent.hpp"
+
 #include <algorithm>
 
 /**
@@ -37,16 +39,33 @@ ofxPlot::ofxPlot(){
 
 	indAxis.setLineWidth(axesWidth);
 	depAxis.setLineWidth(axesWidth);
+
+	ofAddListener(DataSelectedEvent::selected, this, &ofxPlot::dataSelected);
+	ofAddListener(DataSelectedEvent::deselected, this, &ofxPlot::dataDeselected);
+
+	if(!eventsSet){
+		setEvents(ofEvents());
+	}
+
+	enableMouseInput();
+	enableKeyInput();
+}//====================================================
+
+/**
+ *  @brief Destructor; free allocated resources and listeners
+ */
+ofxPlot::~ofxPlot(){
+	ofRemoveListener(DataSelectedEvent::selected, this, &ofxPlot::dataSelected);
+	ofRemoveListener(DataSelectedEvent::deselected, this, &ofxPlot::dataDeselected);
+	
+	disableKeyInput();
+	disableMouseInput();
 }//====================================================
 
 /**
  *  @brief Draw the plot
  */
 void ofxPlot::draw(){
-	if(!eventsSet){
-		setEvents(ofEvents());
-	}
-
 	ofDisableDepthTest();
 	ofPushStyle();
 
@@ -54,17 +73,23 @@ void ofxPlot::draw(){
 	ofSetColor(bgColor);
 	ofDrawRectangle(viewport);
 
+	if(isDrawingOutline){
+		ofNoFill();
+		ofSetColor(axesColor);
+		ofDrawRectangle(viewport);
+	}
+	
 	// Plot window properties
-	float x = viewport.getX();			// top-left corner, increases to the right
-	float y = viewport.getY();			// top-left corner, increases to the bottom
-	float w = viewport.getWidth();
-	float h = viewport.getHeight();
+	float win_x = viewport.getX();			// top-left corner, increases to the right
+	float win_y = viewport.getY();			// top-left corner, increases to the bottom
+	float win_w = viewport.getWidth();
+	float win_h = viewport.getHeight();
 
     // Characteristics of the area that information is plotted in
-    float plot_w = w - 2*padding;       // Width of the area within the axes
-    float plot_h = h - 2*padding;       // Height of the area within the axes
-    float plot_x = x + padding;         // Bottom-left corner of area within the axes
-    float plot_y = y + h - padding;     // Bottom-left corner of the area within the axes
+    float plot_w = win_w - 2*padding;       // Width of the area within the axes
+    float plot_h = win_h - 2*padding;       // Height of the area within the axes
+    float plot_x = win_x + padding;         // Bottom-left corner of area within the axes
+    float plot_y = win_y + win_h - padding;     // Bottom-left corner of the area within the axes
     
     // Get maximum data extents
     float maxX = 0, minX = 0, maxY = 0, minY = 0;
@@ -109,8 +134,8 @@ void ofxPlot::draw(){
 		ofRectangle xLblBox = font.getStringBoundingBox(xlabel, 0,0);
 		font.drawString(xlabel, plot_x + 0.5*(plot_w - xLblBox.width), plot_y + padding - 5);
 	}else{
-		ofDrawBitmapString(title, plot_x + 0.5*plot_w, y + padding - 5);
-		ofDrawBitmapString(xlabel, plot_x + 0.5*plot_w, y + h - 5);
+		ofDrawBitmapString(title, plot_x + 0.5*plot_w, win_y + padding - 5);
+		ofDrawBitmapString(xlabel, plot_x + 0.5*plot_w, win_y + win_h - 5);
 	}
 
 	ofPushMatrix();
@@ -150,30 +175,40 @@ void ofxPlot::draw(){
 		dataPath.draw();
 	}
 
-	if(highlightPtIx >= 0){
+	if(!highlightPtIxs.empty()){
 		ofNoFill();
 
-        // Draw a circle around the selected data point
-		// ofSetColor(ofColor::yellow);
-		// ofSetLineWidth(2);
-		// ofDrawCircle(displayData[highlightPtIx], 4);
-		// ofSetLineWidth(1);
+		size_t ix;
+		for(size_t i = 0; i < highlightPtIxs.size(); i++){
+			ix = highlightPtIxs[i];
+			ofSetColor(ofColor::yellow);
+			ofSetLineWidth(2);
+			ofDrawCircle(displayData[ix], 4);
+			ofSetLineWidth(1);
+		}
 
-        // Draw big cross hairs
+        // Draw big cross hairs on the last selected point
 		ofSetColor(axesColor);
 		ofSetLineWidth(1);
-        ofDrawLine(ofVec2f(plot_x, displayData[highlightPtIx].y), ofVec2f(plot_x + plot_w, displayData[highlightPtIx].y));
-        ofDrawLine(ofVec2f(displayData[highlightPtIx].x, plot_y), ofVec2f(displayData[highlightPtIx].x, plot_y - plot_h));
+        ofDrawLine(ofVec2f(plot_x, displayData[ix].y), ofVec2f(plot_x + plot_w, displayData[ix].y));
+        ofDrawLine(ofVec2f(displayData[ix].x, plot_y), ofVec2f(displayData[ix].x, plot_y - plot_h));
 
         // Print out data value
         char dataStr[128];
-        sprintf(dataStr, "(%.4f, %.4f)", data[highlightPtIx].indVar, data[highlightPtIx].depVar);
+        sprintf(dataStr, "(%.4f, %.4f)", data[ix].indVar, data[ix].depVar);
         if(font.isLoaded()){
         	ofRectangle dataBox = font.getStringBoundingBox(dataStr, 0,0);
         	font.drawString(dataStr, plot_x + plot_w - padding - dataBox.width, plot_y + padding - 5);
         }else{
         	ofDrawBitmapString(dataStr, plot_x + plot_w - 125 - padding, plot_y + padding - 5);
         }
+	}
+
+	if(!selectedArea.isZero()){
+		ofSetColor(axesColor);
+		ofNoFill();
+		ofSetLineWidth(1);
+		ofDrawRectangle(selectedArea);
 	}
 
 	ofPopStyle();
@@ -205,20 +240,42 @@ void ofxPlot::addDataPt(dataPt pt){
  *  @details This allows the user to interact with the plot area
  */
 void ofxPlot::enableMouseInput(){
-	if(!mouseInputEnabled && events){
+	if(!isMouseInputEnabled && events){
 		ofAddListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
+		ofAddListener(events->mousePressed, this, &ofxPlot::mousePressed);
+		ofAddListener(events->mouseReleased, this, &ofxPlot::mouseReleased);
+		ofAddListener(events->mouseDragged, this, &ofxPlot::mouseDragged);
 	}
-	mouseInputEnabled = true;
+	isMouseInputEnabled = true;
 }//====================================================
 
 /**
  *  @brief Disable mouse input for the plot.
  */
 void ofxPlot::disableMouseInput(){
-	if(mouseInputEnabled && events){
+	if(isMouseInputEnabled && events){
 		ofRemoveListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
+		ofRemoveListener(events->mousePressed, this, &ofxPlot::mousePressed);
+		ofRemoveListener(events->mouseReleased, this, &ofxPlot::mouseReleased);
+		ofRemoveListener(events->mouseDragged, this, &ofxPlot::mouseDragged);
 	}
-	mouseInputEnabled = false;
+	isMouseInputEnabled = false;
+}//====================================================
+
+void ofxPlot::enableKeyInput(){
+	if(!isKeyInputEnabled && events){
+		ofAddListener(events->keyPressed, this, &ofxPlot::keyPressed);
+		ofAddListener(events->keyReleased, this, &ofxPlot::keyReleased);
+	}
+	isKeyInputEnabled = true;
+}//====================================================
+
+void ofxPlot::disableKeyInput(){
+	if(isKeyInputEnabled && events){
+		ofRemoveListener(events->keyPressed, this, &ofxPlot::keyPressed);
+		ofRemoveListener(events->keyReleased, this, &ofxPlot::keyReleased);
+	}
+	isKeyInputEnabled = false;
 }//====================================================
 
 /**
@@ -234,7 +291,7 @@ void ofxPlot::setEvents(ofCoreEvents & _events){
 
 	// we need a temporary copy of bMouseInputEnabled, since it will 
 	// get changed by disableMouseInput as a side-effect.
-	bool wasMouseInputEnabled = mouseInputEnabled;
+	bool wasMouseInputEnabled = isMouseInputEnabled;
 	disableMouseInput();
 	events = &_events;
 	if (wasMouseInputEnabled) {
@@ -251,6 +308,10 @@ void ofxPlot::setEvents(ofCoreEvents & _events){
  *  area under the plotted curve
  */
 void ofxPlot::setFillPlot(bool fill){ fillPlot = fill; }
+
+void ofxPlot::setHighlightedPts(std::vector<int> ixs){
+	highlightPtIxs = ixs;
+}
 
 /**
  *  @brief Set the font for the plot area
@@ -349,6 +410,24 @@ void ofxPlot::setLineColor(ofColor c){ lineColor = c;}
 void ofxPlot::setTextColor(ofColor c){ textColor = c;}
 
 /**
+ *  @brief Handle keyPressed events
+ * 
+ *  @param evt Describes the keyPressed Event
+ */
+void ofxPlot::keyPressed(ofKeyEventArgs &evt){
+	heldKey = evt.key;
+}//====================================================
+
+/**
+ *  @brief Handle keyReleased events
+ * 
+ *  @param evt Describes the keyReleased Event
+ */
+void ofxPlot::keyReleased(ofKeyEventArgs &evt){
+	heldKey = 0;
+}//====================================================
+
+/**
  *  @brief Handle mouse movement events
  *  @details This function is called every time the mouse is moved
  *  (assuming mouse input has been enabled)
@@ -357,26 +436,89 @@ void ofxPlot::setTextColor(ofColor c){ textColor = c;}
  */
 void ofxPlot::mouseMoved(ofMouseEventArgs &mouse){
 	if(viewport.inside(mouse.x, mouse.y)){
-		// Find nearest point
-		float minDist;
-		int minIx;
-		for(size_t i = 0; i < displayData.size(); i++){
-			ofVec2f dist = displayData[i] - mouse;
+		isDrawingOutline = true;
 
-			if(i == 0 || dist.length() < minDist){
-				minDist = dist.length();
-				minIx = i;
+		// Only highlight points if the mouse is inside the view AND the mouse isn't being dragged
+		if(!isMouseDragged && heldKey == 'i'){
+			// Find nearest point
+			float minDist;
+			int minIx;
+			for(size_t i = 0; i < displayData.size(); i++){
+				ofVec2f dist = displayData[i] - mouse;
+
+				if(i == 0 || dist.length() < minDist){
+					minDist = dist.length();
+					minIx = i;
+				}
+			}
+
+
+			DataSelectedEventArgs args(minIx);
+			if(minDist < maxSelectDist){
+				ofNotifyEvent(DataSelectedEvent::selected, args);
+			}else{
+				ofNotifyEvent(DataSelectedEvent::deselected, args);
 			}
 		}
-
-		if(minDist < maxSelectDist){
-			highlightPtIx = minIx;
-		}else{
-			highlightPtIx = -1;
-		}
+	}else{
+		isDrawingOutline = false;
 	}
 }//====================================================
 
+void ofxPlot::mousePressed(ofMouseEventArgs &mouse){
+	if(viewport.inside(mouse.x, mouse.y)){
+		mousePressedPt.x = mouse.x;
+		mousePressedPt.y = mouse.y;
+		isMousePressedInside = true;
+	}
+}//====================================================
+
+void ofxPlot::mouseReleased(ofMouseEventArgs &mouse){
+	selectedArea = ofRectangle(0,0,0,0);
+	isMousePressedInside = false;
+	isMouseDragged = false;
+}//====================================================
+
+void ofxPlot::mouseDragged(ofMouseEventArgs &mouse){
+	if(isMousePressedInside){
+
+		// Limit mouse coordinates to the bounds of the viewport rectangle
+		float mX = mouse.x > viewport.x ? mouse.x : viewport.x;
+		float mY = mouse.y > viewport.y ? mouse.y : viewport.y;
+		
+		if(mX > viewport.x + viewport.width)
+			mX = viewport.x + viewport.width;
+
+		if(mY > viewport.y + viewport.height)
+			mY = viewport.y + viewport.height;
+
+		// update rectangle
+		selectedArea.setPosition(std::min(mX, mousePressedPt.x), std::min(mY, mousePressedPt.y));	// top-left
+		selectedArea.setSize(std::max(mX, mousePressedPt.x) - selectedArea.x,
+			std::max(mY, mousePressedPt.y) - selectedArea.y);
+
+		// Update selection and send event
+		DataSelectedEventArgs args;
+		for(size_t i = 0; i < displayData.size(); i++){
+			if(selectedArea.inside(displayData[i].x, displayData[i].y)){
+				args.indices.push_back(i);
+			}
+		}
+		if(!args.indices.empty())
+			ofNotifyEvent(DataSelectedEvent::selected, args);
+
+	}
+	isMouseDragged = true;
+}//=====================================================
+
+void ofxPlot::dataSelected(DataSelectedEventArgs &args){
+	setHighlightedPts(args.indices);
+}//====================================================
+
+void ofxPlot::dataDeselected(DataSelectedEventArgs &args){
+	std::vector<int> empty;
+	setHighlightedPts(empty);
+}//====================================================
 
 
 

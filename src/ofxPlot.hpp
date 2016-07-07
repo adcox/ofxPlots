@@ -34,6 +34,9 @@
 #include <vector>
 
 
+// Forward declarations
+class DataSelectedEventArgs;
+
 /**
  *  @brief Structure that contains values for a single data point
  */
@@ -63,16 +66,20 @@ class ofxPlot{
 
 public:
 	ofxPlot();
-
+	~ofxPlot();
+	
 	void draw();
 
 	void addDataPt(double, double);
 	void addDataPt(dataPt);
 
+	void enableKeyInput();
 	void enableMouseInput();
+	void disableKeyInput();
 	void disableMouseInput();
 
 	void setFillPlot(bool);
+	void setHighlightedPts(std::vector<int>);
 	void setFont(ofTrueTypeFont);
 	void setPosition(float, float);
 	void setPosition(ofVec2f);
@@ -88,8 +95,16 @@ public:
 	void setLineColor(ofColor);
 	void setTextColor(ofColor);
 
-	void mouseMoved(ofMouseEventArgs&);
+	void dataDeselected(DataSelectedEventArgs&);
+	void dataSelected(DataSelectedEventArgs&);
 
+	void mouseMoved(ofMouseEventArgs&);
+	void mousePressed(ofMouseEventArgs&);
+	void mouseReleased(ofMouseEventArgs&);
+	void mouseDragged(ofMouseEventArgs&);
+
+	void keyPressed(ofKeyEventArgs&);
+	void keyReleased(ofKeyEventArgs&);
 protected:
 	std::vector<dataPt> data;		//!< Stores all data values
 	std::vector<ofVec2f> displayData;//!< Same data, but in screen coordiantes (pixels)
@@ -98,9 +113,13 @@ protected:
 	std::string ylabel = "";		//!< Vertical axis label
 	std::string title = "";			//!< Plot title
 
+	bool isDrawingOutline = false;	//!< Whether or not to draw an outline
 	bool eventsSet = false;			//!< Whether or not the events have been set
 	bool fillPlot = false;			//!< Whether or not to fill the plot area
-	bool mouseInputEnabled = false;	//!< Whether or not the user can interact with the plot using the mouse
+	bool isMouseInputEnabled = false;	//!< Whether or not the user can interact with the plot using the mouse
+	bool isMousePressedInside = false;//!< Whether or not the mouse was pressed while inside the plot
+	bool isMouseDragged = false;
+	bool isKeyInputEnabled = false;		//!< Whether or not the use can interact with the plot using the keyboard
 
 	ofCoreEvents *events;			//!< Pointer to events object
 
@@ -110,7 +129,8 @@ protected:
 	ofColor axesColor = ofColor(200, 200, 200, 0.9*255);	//!< Axes color
 	ofColor textColor = ofColor(200, 200, 200, 255);		//!< Axes label and title color
 
-	int highlightPtIx = -1;			//!< Data point to highlight; -1 is for N/A
+	std::vector<int> highlightPtIxs;						//!< Data points to highlight
+	int heldKey = 0;										//!< Identifies which key is currently held down
 
 	float axesWidth = 3;			//!< Axes line width
 	float lineWidth = 2;			//!< Plotted data line width
@@ -118,6 +138,10 @@ protected:
 	float padding = 25;				//!< Distance between outer rectangle and plot (i.e., with data) area
 
 	ofRectangle viewport = ofRectangle(0, 0, 350, 350);		//!< Describes the area the plot occupies in screen space
+	ofRectangle selectedArea = ofRectangle(0,0,0,0);		//!< Describes a rectangular selection area
+
+	ofVec2f mousePressedPt;
+	
 	ofxPlotArrow indAxis, depAxis;	//!< Axes arrows
 
 	ofTrueTypeFont font;
