@@ -30,55 +30,34 @@
 
 #include <algorithm>
 
+//-----------------------------------------------------------------------------
+// -- *structors --
+//-----------------------------------------------------------------------------
+
 /**
  *  @brief Construct a default ofxPlot object
  */
-ofxPlot::ofxPlot(){
+ofxPlot::ofxPlot() : InteractiveObj(){
 	indAxis.setColor(axesColor);
 	depAxis.setColor(axesColor);
 
 	indAxis.setLineWidth(axesWidth);
 	depAxis.setLineWidth(axesWidth);
-
-	ofAddListener(DataSelectedEvent::selected, this, &ofxPlot::dataSelected);
-	ofAddListener(DataSelectedEvent::deselected, this, &ofxPlot::dataDeselected);
-
-	if(!eventsSet){
-		setEvents(ofEvents());
-	}
-
-	enableMouseInput();
-	enableKeyInput();
 }//====================================================
 
-/**
- *  @brief Destructor; free allocated resources and listeners
- */
-ofxPlot::~ofxPlot(){
-	ofRemoveListener(DataSelectedEvent::selected, this, &ofxPlot::dataSelected);
-	ofRemoveListener(DataSelectedEvent::deselected, this, &ofxPlot::dataDeselected);
-	
-	disableKeyInput();
-	disableMouseInput();
-}//====================================================
+//-----------------------------------------------------------------------------
+// -- Graphics --
+//-----------------------------------------------------------------------------
 
 /**
  *  @brief Draw the plot
  */
 void ofxPlot::draw(){
+	InteractiveObj::draw();
+
 	ofDisableDepthTest();
 	ofPushStyle();
 
-	// Draw background
-	ofSetColor(bgColor);
-	ofDrawRectangle(viewport);
-
-	if(isDrawingOutline){
-		ofNoFill();
-		ofSetColor(axesColor);
-		ofDrawRectangle(viewport);
-	}
-	
 	// Plot window properties
 	float win_x = viewport.getX();			// top-left corner, increases to the right
 	float win_y = viewport.getY();			// top-left corner, increases to the bottom
@@ -215,6 +194,10 @@ void ofxPlot::draw(){
 	ofEnableDepthTest();
 }//====================================================
 
+//-----------------------------------------------------------------------------
+// -- Set and Get Functions --
+//-----------------------------------------------------------------------------
+
 /**
  *  @brief Add a data point to the plot
  * 
@@ -236,72 +219,6 @@ void ofxPlot::addDataPt(dataPt pt){
 }//====================================================
 
 /**
- *  @brief Enable mouse input for the plot.
- *  @details This allows the user to interact with the plot area
- */
-void ofxPlot::enableMouseInput(){
-	if(!isMouseInputEnabled && events){
-		ofAddListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
-		ofAddListener(events->mousePressed, this, &ofxPlot::mousePressed);
-		ofAddListener(events->mouseReleased, this, &ofxPlot::mouseReleased);
-		ofAddListener(events->mouseDragged, this, &ofxPlot::mouseDragged);
-	}
-	isMouseInputEnabled = true;
-}//====================================================
-
-/**
- *  @brief Disable mouse input for the plot.
- */
-void ofxPlot::disableMouseInput(){
-	if(isMouseInputEnabled && events){
-		ofRemoveListener(events->mouseMoved, this, &ofxPlot::mouseMoved);
-		ofRemoveListener(events->mousePressed, this, &ofxPlot::mousePressed);
-		ofRemoveListener(events->mouseReleased, this, &ofxPlot::mouseReleased);
-		ofRemoveListener(events->mouseDragged, this, &ofxPlot::mouseDragged);
-	}
-	isMouseInputEnabled = false;
-}//====================================================
-
-void ofxPlot::enableKeyInput(){
-	if(!isKeyInputEnabled && events){
-		ofAddListener(events->keyPressed, this, &ofxPlot::keyPressed);
-		ofAddListener(events->keyReleased, this, &ofxPlot::keyReleased);
-	}
-	isKeyInputEnabled = true;
-}//====================================================
-
-void ofxPlot::disableKeyInput(){
-	if(isKeyInputEnabled && events){
-		ofRemoveListener(events->keyPressed, this, &ofxPlot::keyPressed);
-		ofRemoveListener(events->keyReleased, this, &ofxPlot::keyReleased);
-	}
-	isKeyInputEnabled = false;
-}//====================================================
-
-/**
- *  @brief Give the camera the event object
- *  @param _events reference to the window's events object
- */
-void ofxPlot::setEvents(ofCoreEvents & _events){
-	// If en/disableMouseInput were called within ofApp::setup(),
-	// mouseInputEnabled will tell us about whether the camera
-	// mouse input needs to be initialised as enabled or disabled.
-	// we will still set `events`, so that subsequent enabling
-	// and disabling can work.
-
-	// we need a temporary copy of bMouseInputEnabled, since it will 
-	// get changed by disableMouseInput as a side-effect.
-	bool wasMouseInputEnabled = isMouseInputEnabled;
-	disableMouseInput();
-	events = &_events;
-	if (wasMouseInputEnabled) {
-		// note: this will set bMouseInputEnabled to true as a side-effect.
-		enableMouseInput();
-	}
-	eventsSet = true;
-}//====================================================
-
-/**
  *  @brief Tell the plot whether or not to fill the plot area
  * 
  *  @param fill whether or not to fill the plot area, i.e., the
@@ -311,53 +228,6 @@ void ofxPlot::setFillPlot(bool fill){ fillPlot = fill; }
 
 void ofxPlot::setHighlightedPts(std::vector<int> ixs){
 	highlightPtIxs = ixs;
-}
-
-/**
- *  @brief Set the font for the plot area
- * 
- *  @param f font to use for the plot
- */
-void ofxPlot::setFont(ofTrueTypeFont f){ font = f; }
-
-/**
- *  @brief Set the position of the plot
- * 
- *  @param x pixels, window coordinates
- *  @param y pixels, window coordinates
- */
-void ofxPlot::setPosition(float x, float y){
-	viewport.setPosition(x, y);
-}//====================================================
-
-/**
- *  @brief Set the position of the plot area
- * 
- *  @param pos vector storing (x, y)
- *  @see setPosition(float, float)
- */
-void ofxPlot::setPosition(ofVec2f pos){
-	setPosition(pos.x, pos.y);
-}//====================================================
-
-/**
- *  @brief Set the size of the plot area
- * 
- *  @param w width, pixels
- *  @param h height, pixels
- */
-void ofxPlot::setSize(float w, float h){
-	viewport.setSize(w, h);
-}//====================================================
-
-/**
- *  @brief Set the size of the plot area
- * 
- *  @param size vector storing (width, height)
- *  @see setSize(float, float)
- */
-void ofxPlot::setSize(ofVec2f size){
-	setSize(size.x, size.y);
 }//====================================================
 
 /**
@@ -385,12 +255,6 @@ void ofxPlot::setTitle(std::string str){ title = str; }
 void ofxPlot::setAxesColor(ofColor c){ axesColor = c;}
 
 /**
- *  @brief Set the background color
- *  @param c background color
- */
-void ofxPlot::setBGColor(ofColor c){ bgColor = c;}
-
-/**
  *  @brief Set the plot fill color, i.e., the color of the 
  *  fill under the curve
  *  @param c fill color
@@ -409,23 +273,11 @@ void ofxPlot::setLineColor(ofColor c){ lineColor = c;}
  */
 void ofxPlot::setTextColor(ofColor c){ textColor = c;}
 
-/**
- *  @brief Handle keyPressed events
- * 
- *  @param evt Describes the keyPressed Event
- */
-void ofxPlot::keyPressed(ofKeyEventArgs &evt){
-	heldKey = evt.key;
-}//====================================================
 
-/**
- *  @brief Handle keyReleased events
- * 
- *  @param evt Describes the keyReleased Event
- */
-void ofxPlot::keyReleased(ofKeyEventArgs &evt){
-	heldKey = 0;
-}//====================================================
+//-----------------------------------------------------------------------------
+// -- Event Handlers --
+//-----------------------------------------------------------------------------
+
 
 /**
  *  @brief Handle mouse movement events
@@ -435,48 +287,35 @@ void ofxPlot::keyReleased(ofKeyEventArgs &evt){
  *  @param mouse mouse event arguments
  */
 void ofxPlot::mouseMoved(ofMouseEventArgs &mouse){
-	if(viewport.inside(mouse.x, mouse.y)){
-		isDrawingOutline = true;
+	InteractiveObj::mouseMoved(mouse);
 
-		// Only highlight points if the mouse is inside the view AND the mouse isn't being dragged
-		if(!isMouseDragged && heldKey == 'i'){
-			// Find nearest point
-			float minDist;
-			int minIx;
-			for(size_t i = 0; i < displayData.size(); i++){
-				ofVec2f dist = displayData[i] - mouse;
+	// Only highlight points if the mouse is inside the view AND the mouse isn't being dragged
+	if(viewport.inside(mouse.x, mouse.y) && !isMouseDragged && heldKey == 'i'){
+		// Find nearest point
+		float minDist;
+		int minIx;
+		for(size_t i = 0; i < displayData.size(); i++){
+			ofVec2f dist = displayData[i] - mouse;
 
-				if(i == 0 || dist.length() < minDist){
-					minDist = dist.length();
-					minIx = i;
-				}
-			}
-
-
-			DataSelectedEventArgs args(minIx);
-			if(minDist < maxSelectDist){
-				ofNotifyEvent(DataSelectedEvent::selected, args);
-			}else{
-				ofNotifyEvent(DataSelectedEvent::deselected, args);
+			if(i == 0 || dist.length() < minDist){
+				minDist = dist.length();
+				minIx = i;
 			}
 		}
-	}else{
-		isDrawingOutline = false;
-	}
-}//====================================================
 
-void ofxPlot::mousePressed(ofMouseEventArgs &mouse){
-	if(viewport.inside(mouse.x, mouse.y)){
-		mousePressedPt.x = mouse.x;
-		mousePressedPt.y = mouse.y;
-		isMousePressedInside = true;
+
+		DataSelectedEventArgs args(minIx);
+		if(minDist < maxSelectDist){
+			ofNotifyEvent(DataSelectedEvent::selected, args);
+		}else{
+			ofNotifyEvent(DataSelectedEvent::deselected, args);
+		}
 	}
 }//====================================================
 
 void ofxPlot::mouseReleased(ofMouseEventArgs &mouse){
+	InteractiveObj::mouseReleased(mouse);
 	selectedArea = ofRectangle(0,0,0,0);
-	isMousePressedInside = false;
-	isMouseDragged = false;
 }//====================================================
 
 void ofxPlot::mouseDragged(ofMouseEventArgs &mouse){
@@ -508,7 +347,6 @@ void ofxPlot::mouseDragged(ofMouseEventArgs &mouse){
 			ofNotifyEvent(DataSelectedEvent::selected, args);
 
 	}
-	isMouseDragged = true;
 }//=====================================================
 
 void ofxPlot::dataSelected(DataSelectedEventArgs &args){
