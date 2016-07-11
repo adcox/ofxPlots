@@ -46,6 +46,13 @@ public:
 	void disableKeyInput();
 	void disableMouseInput();
 
+
+	ofVec2f getPosition() const;
+	ofVec2f getSize() const;
+	ofRectangle getViewport() const;
+
+	bool isHovered() const;
+
 	virtual void setBGColor(ofColor);
 	virtual void setEdgeColor(ofColor);
 	virtual void setFont(ofTrueTypeFont);
@@ -53,7 +60,11 @@ public:
 	void setPosition(ofVec2f);
 	virtual void setSize(float, float);
 	void setSize(ofVec2f);
-
+	virtual void setX(float);
+	virtual void setY(float);
+	virtual void setWidth(float);
+	virtual void setHeight(float);
+	
 	virtual void dataSelected(DataSelectedEventArgs&);
 	virtual void dataDeselected(DataSelectedEventArgs&);
 	
@@ -68,9 +79,9 @@ public:
 protected:
 
 	bool areEventsSet = false;			//!< Whether or not the events have been set
-	bool isDrawingOutline = false;		//!< Whether or not to draw an outline
+	bool isMouseInside = false;			//!< Whether or not the mouse is inside the bounds defined by the viewport rectangle
 	bool isMouseInputEnabled = false;	//!< Whether or not the user can interact with the plot using the mouse
-	bool isMousePressedInside = false;	//!< Whether or not the mouse was pressed while inside the plot
+	bool isMousePressedInside = false;	//!< Whether or not the mouse was pressed while inside the object
 	bool isMouseDragged = false;		//!< Whether or not the mouse is being dragged
 	bool isKeyInputEnabled = false;		//!< Whether or not the use can interact with the plot using the keyboard
 

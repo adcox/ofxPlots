@@ -92,7 +92,7 @@ void InteractiveObj::draw(){
 	ofSetColor(bgColor);
 	ofDrawRectangle(viewport);
 
-	if(isDrawingOutline){
+	if(isMouseInside){
 		ofNoFill();
 		ofSetColor(edgeColor);
 		ofDrawRectangle(viewport);
@@ -155,6 +155,31 @@ void InteractiveObj::disableKeyInput(){
 }//====================================================
 
 /**
+ *  @brief Determine whether the mouse is hovering over this object
+ *  @return whether or not the mouse is hovering over this object
+ */
+bool InteractiveObj::isHovered() const { return isMouseInside; }
+
+/**
+ *  @brief Retrieve the position of the bounding viewport rectangle
+ *  @details Position describes the top-left corner in screen coordinates
+ *  @return the position of the bounding viewport rectangle
+ */
+ofVec2f InteractiveObj::getPosition() const { return viewport.getPosition(); }
+
+/**
+ *  @brief Retrieve the size of the bounding viewport rectangle
+ *  @return the size of the bounding viewport rectangle
+ */
+ofVec2f InteractiveObj::getSize() const { return ofVec2f(viewport.width, viewport.height); }
+
+/**
+ *  @brief Retrieve the bounding viewport rectangle
+ *  @return the bounding viewport rectangle
+ */
+ofRectangle InteractiveObj::getViewport() const { return viewport; }
+
+/**
  *  @brief Set the background color
  *  @param c background color
  */
@@ -213,6 +238,10 @@ void InteractiveObj::setSize(ofVec2f size){
 	setSize(size.x, size.y);
 }//====================================================
 
+void InteractiveObj::setX(float x){ viewport.x = x; }
+void InteractiveObj::setY(float y){ viewport.y = y; }
+void InteractiveObj::setWidth(float w){ viewport.width = w; }
+void InteractiveObj::setHeight(float h){ viewport.height = h; }
 
 //-----------------------------------------------------------------------------
 // -- Event Handlers --
@@ -304,9 +333,9 @@ void InteractiveObj::mouseMoved(ofMouseEventArgs &mouse){
 	mouseY = mouse.y;
 	
 	if(viewport.inside(mouse.x, mouse.y)){
-		isDrawingOutline = true;
+		isMouseInside = true;
 	}else{
-		isDrawingOutline = false;
+		isMouseInside = false;
 	}
 }//====================================================
 
