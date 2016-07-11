@@ -76,13 +76,12 @@ protected:
 
 	int heldKey = 0;					//!< Identifies which key is currently held down
 
-	float mouseX, mouseY;
-
-	ofCoreEvents *events;				//!< Pointer to events object
-	
+	float mouseX, mouseY;				//!< Store current mouse coordinates
 	ofVec2f mousePressedPt;				//!< Last point where the mouse was pressed, screen coordinates
 
-	ofColor bgColor = ofColor(50, 50, 50, 0.95*255);		//!< Background color
+	ofCoreEvents *events;				//!< Pointer to events object
+
+	ofColor bgColor = ofColor(50, 50, 50, 0.85*255);		//!< Background color
 	ofColor edgeColor = ofColor(200, 200, 200, 0.95*255);	//!< Edge color
 
 	ofRectangle viewport = ofRectangle(0, 0, 350, 350);		//!< Describes the area the object occupies in screen space

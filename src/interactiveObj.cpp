@@ -30,6 +30,12 @@
 // -- *structors --
 //-----------------------------------------------------------------------------
 
+/**
+ *  @brief Construct a default InteractiveObject.
+ *  @details This function should be called in the initialization list
+ *  for all derived classes as it initializes several important variables
+ *  and pointers.
+ */
 InteractiveObj::InteractiveObj(){
 	if(!areEventsSet)
 		setEvents(ofEvents());
@@ -41,6 +47,11 @@ InteractiveObj::InteractiveObj(){
 	enableKeyInput();
 }//====================================================
 
+/**
+ *  @brief Default destructor.
+ *  @details This function removes all listeners from the object before 
+ *  it is destroyed
+ */
 InteractiveObj::~InteractiveObj(){
 	ofRemoveListener(DataSelectedEvent::selected, this, &InteractiveObj::dataSelected);
 	ofRemoveListener(DataSelectedEvent::deselected, this, &InteractiveObj::dataDeselected);
@@ -53,10 +64,28 @@ InteractiveObj::~InteractiveObj(){
 // -- Graphics & Event Loop --
 //-----------------------------------------------------------------------------
 
+/**
+ *  @brief A function to set up the object.
+ *  @details By default, this function does
+ *  nothing but can be overridden to provide
+ *  custom behavior
+ */
 void InteractiveObj::setup(){}
 
+/**
+ *  @brief A function to update the object.
+ *  @details By default, this function does
+ *  nothing but can be overridden to provide
+ *  custom behavior
+ */
 void InteractiveObj::update(){}
 
+/**
+ *  @brief Call this function to draw the object.
+ *  @details In this base class, this function draws
+ *  only the background and border. This function can be
+ *  overridden to provide custom behavior
+ */
 void InteractiveObj::draw(){
 	ofDisableDepthTest();
 	ofPushStyle();
@@ -103,6 +132,9 @@ void InteractiveObj::disableMouseInput(){
 	isMouseInputEnabled = false;
 }//====================================================
 
+/**
+ *  @brief Enable keyboard input for this object
+ */
 void InteractiveObj::enableKeyInput(){
 	if(!isKeyInputEnabled && events){
 		ofAddListener(events->keyPressed, this, &InteractiveObj::keyPressed);
@@ -111,6 +143,9 @@ void InteractiveObj::enableKeyInput(){
 	isKeyInputEnabled = true;
 }//====================================================
 
+/**
+ *  @brief Disable keyboard input for this object
+ */
 void InteractiveObj::disableKeyInput(){
 	if(isKeyInputEnabled && events){
 		ofRemoveListener(events->keyPressed, this, &InteractiveObj::keyPressed);
@@ -183,13 +218,26 @@ void InteractiveObj::setSize(ofVec2f size){
 // -- Event Handlers --
 //-----------------------------------------------------------------------------
 
+/**
+ *  @brief A function to handle data selection events
+ *  @param args data structure containing information about the event
+ *  @see dataSelectedEventArgs
+ */
 void InteractiveObj::dataSelected(DataSelectedEventArgs &args){}
+
+/**
+ *  @brief A function to handle data deselection events
+ *  @param args data structure containing information about the event
+ *  @see dataSelectedEventArgs
+ */
 void InteractiveObj::dataDeselected(DataSelectedEventArgs &args){}
 
 /**
  *  @brief Handle keyPressed events
- * 
- *  @param evt Describes the keyPressed Event
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param evt A set of arguments that describe the keyPressed event
  */
 void InteractiveObj::keyPressed(ofKeyEventArgs &evt){
 	heldKey = evt.key;
@@ -197,13 +245,22 @@ void InteractiveObj::keyPressed(ofKeyEventArgs &evt){
 
 /**
  *  @brief Handle keyReleased events
- * 
- *  @param evt Describes the keyReleased Event
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param evt A set of arguments that describe the keyReleased event
  */
 void InteractiveObj::keyReleased(ofKeyEventArgs &evt){
 	heldKey = 0;
 }//====================================================
 
+/**
+ *  @brief Handle mousePressed events
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param mouse a set of arguments that describes the mousePressed event
+ */
 void InteractiveObj::mousePressed(ofMouseEventArgs &mouse){
 	if(viewport.inside(mouse.x, mouse.y)){
 		mousePressedPt.x = mouse.x;
@@ -212,15 +269,36 @@ void InteractiveObj::mousePressed(ofMouseEventArgs &mouse){
 	}
 }//====================================================
 
+/**
+ *  @brief Handle mouseReleased events
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param mouse a set of arguments that describes the mouseReleased event
+ */
 void InteractiveObj::mouseReleased(ofMouseEventArgs &mouse){
 	isMousePressedInside = false;
 	isMouseDragged = false;
 }//====================================================
 
+/**
+ *  @brief Handle mouseDragged events
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param mouse a set of arguments that describes the mouseDragged event
+ */
 void InteractiveObj::mouseDragged(ofMouseEventArgs &mouse){
 	isMouseDragged = true;
 }//====================================================
 
+/**
+ *  @brief Handle mousePressed events
+ *  @details This function can be overridden, but should be called
+ *  from the derived class's version to preserve functionality
+ *  provided by this base class.
+ *  @param mouse a set of arguments that describes the mouseMoved event
+ */
 void InteractiveObj::mouseMoved(ofMouseEventArgs &mouse){
 	mouseX = mouse.x;
 	mouseY = mouse.y;
