@@ -1,19 +1,19 @@
-#include "ofxPlotTimelineLimiter.hpp"
+#include "ofxPlotCtrlLimiter.hpp"
 
 //-----------------------------------------------------------------------------
 // -- *structors --
 //-----------------------------------------------------------------------------
 
-ofxPlotTimelineLimiter::ofxPlotTimelineLimiter(){
+ofxPlotCtrlLimiter::ofxPlotCtrlLimiter(){
 	init();
 }//====================================================
 
-ofxPlotTimelineLimiter::ofxPlotTimelineLimiter(bool isUpper){
+ofxPlotCtrlLimiter::ofxPlotCtrlLimiter(bool isUpper){
 	this->isUpper = isUpper;
 	init();
 }//====================================================
 
-void ofxPlotTimelineLimiter::init(){
+void ofxPlotCtrlLimiter::init(){
 	bgColor = ofColor(204, 163, 0, 0.9*255);
 }//====================================================
 
@@ -21,7 +21,7 @@ void ofxPlotTimelineLimiter::init(){
 // -- Graphics and Event Loop --
 //-----------------------------------------------------------------------------
 
-void ofxPlotTimelineLimiter::update(){
+void ofxPlotCtrlLimiter::update(){
 	// Compute the width of the triangle using trig
 	viewport.width = (isUpper ? -1 : 1)*0.5*std::sqrt(3)*viewport.height;
 
@@ -33,7 +33,7 @@ void ofxPlotTimelineLimiter::update(){
 			std::max(viewport.x, viewport.x + viewport.width));
 }//====================================================
 
-void ofxPlotTimelineLimiter::draw(){
+void ofxPlotCtrlLimiter::draw(){
 	// Do not call the base-class draw function; completely override it
 	ofPath outline;
 	outline.moveTo(viewport.x, viewport.y);
@@ -66,7 +66,7 @@ void ofxPlotTimelineLimiter::draw(){
  *  
  *  @return the coordinate that locates the limiter in screen coordinates
  */
-float ofxPlotTimelineLimiter::getLimiterCoord() const{
+float ofxPlotCtrlLimiter::getLimiterCoord() const{
 	return moveLR ? viewport.x + viewport.width : viewport.y + viewport.height;
 }//====================================================
 
@@ -78,7 +78,7 @@ float ofxPlotTimelineLimiter::getLimiterCoord() const{
  * 
  *  @param coord desired coordinate value, screen pixel coordinates
  */
-void ofxPlotTimelineLimiter::moveToLimiterCoord(float coord){
+void ofxPlotCtrlLimiter::moveToLimiterCoord(float coord){
 	if(moveLR)
 		viewport.x = coord - viewport.width;
 	else
@@ -91,7 +91,7 @@ void ofxPlotTimelineLimiter::moveToLimiterCoord(float coord){
  *  @param min lowest (left-most) x-value the limiter can move to
  *  @param max highest (right-most) x-value the limiter can move to
  */
-void ofxPlotTimelineLimiter::setXBounds(float min, float max){
+void ofxPlotCtrlLimiter::setXBounds(float min, float max){
 	bounds[0] = min;
 	bounds[1] = max;
 }//====================================================
@@ -102,7 +102,7 @@ void ofxPlotTimelineLimiter::setXBounds(float min, float max){
  *  @param min lowest (top-most) y-value the limiter can move to
  *  @param max highest (bottom-most) y-value the limiter can move to
  */
-void ofxPlotTimelineLimiter::setYBounds(float min, float max){
+void ofxPlotCtrlLimiter::setYBounds(float min, float max){
 	bounds[2] = min;
 	bounds[3] = max;
 }//====================================================
@@ -119,7 +119,7 @@ void ofxPlotTimelineLimiter::setYBounds(float min, float max){
  * 
  *  @param mouse contains information relevant to the mouse event
  */
-void ofxPlotTimelineLimiter::mouseDragged(ofMouseEventArgs &mouse){
+void ofxPlotCtrlLimiter::mouseDragged(ofMouseEventArgs &mouse){
 	if(isMousePressedInside){
 		
 		if(moveLR && mouse.x >= bounds[0] && mouse.x <= bounds[1])

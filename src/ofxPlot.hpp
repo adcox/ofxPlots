@@ -73,7 +73,8 @@ public:
 
 	void addDataPt(double, double);
 	void addDataPt(dataPt);
-
+	void clearData();
+	
 	void enableKeyInput();
 	void enableMouseInput();
 	void disableKeyInput();
@@ -98,8 +99,8 @@ public:
 	void mouseDragged(ofMouseEventArgs&);
 
 protected:
-	std::vector<dataPt> data;		//!< Stores all data values
-	std::vector<ofVec2f> displayData;//!< Same data, but in screen coordiantes (pixels)
+	std::vector<dataPt> data;			//!< Stores all data values
+	std::vector<ofVec2f> displayData;	//!< Same data, but in screen coordiantes (pixels)
 
 	std::string xlabel = "";		//!< Horizontal axis label
 	std::string ylabel = "";		//!< Vertical axis label

@@ -2,10 +2,10 @@
 
 #include "interactiveObj.hpp"
 
-class ofxPlotTimelineLimiter : public InteractiveObj{
+class ofxPlotCtrlLimiter : public InteractiveObj{
 	public:
-		ofxPlotTimelineLimiter();
-		ofxPlotTimelineLimiter(bool);
+		ofxPlotCtrlLimiter();
+		ofxPlotCtrlLimiter(bool);
 
 		void update();
 		void draw();
@@ -18,6 +18,7 @@ class ofxPlotTimelineLimiter : public InteractiveObj{
 
 		void mouseDragged(ofMouseEventArgs&);
 	protected:
+
 		bool isUpper = true;		//!< Whether or not this limitter represents the upper bound
 		bool moveLR = true;			//!< Whether or not the limitter moves Left/Right or Up/Down
 

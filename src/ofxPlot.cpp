@@ -156,15 +156,15 @@ void ofxPlot::draw(){
 
 	if(!highlightPtIxs.empty()){
 		ofNoFill();
+		ofSetColor(ofColor::yellow);
+		ofSetLineWidth(2);
 
 		size_t ix;
 		for(size_t i = 0; i < highlightPtIxs.size(); i++){
 			ix = highlightPtIxs[i];
-			ofSetColor(ofColor::yellow);
-			ofSetLineWidth(2);
 			ofDrawCircle(displayData[ix], 4);
-			ofSetLineWidth(1);
 		}
+		ofSetLineWidth(1);
 
         // Draw big cross hairs on the last selected point
 		ofSetColor(axesColor);
@@ -216,6 +216,10 @@ void ofxPlot::addDataPt(double ind, double dep){
  */
 void ofxPlot::addDataPt(dataPt pt){
     data.push_back(pt);
+}//====================================================
+
+void ofxPlot::clearData(){
+	data.clear();
 }//====================================================
 
 /**
